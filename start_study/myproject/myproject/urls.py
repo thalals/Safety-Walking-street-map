@@ -16,8 +16,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.urls.conf import include
+from django.conf import settings  # static
+from django.conf.urls.static import static #static 이미지 추가
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',include('firstapp.urls')),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) 

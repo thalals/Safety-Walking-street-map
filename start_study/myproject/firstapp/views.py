@@ -1,5 +1,8 @@
 from django.shortcuts import render
+from . import models
 
 # Create your views here.
 def home(request):
-    return render(request,'home.html')
+    designer = models.Designer.objects.all()
+    print(designer)
+    return render(request,'home.html', {'designer' : designer})
