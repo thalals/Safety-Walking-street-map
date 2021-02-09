@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+  	<div class="navbar">
+      이부분이 모든 페이지에 공통으로 들어갈 요소
+  	</div>
+    {% block content %} 
+  		{% comment %} base.html을 상속한 템플릿에서 구현해야 하는 영역 {% endcomment %}
+    {% endblock %}
+</body>
+</html>
