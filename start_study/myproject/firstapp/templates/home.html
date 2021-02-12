@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 <br>
 {% block content %}
-
+<br>
+<br>
 <h3> 여기는 홈 화면 템플릿 변수를 이용해 화면에 출력했지롱 </h3>
 
 {% for d in designer %}
@@ -9,13 +10,20 @@
     {% if d.image %}
         <img src = '{{ d.image.url }}' hegiht = 150 width = 150>
     {% endif %}
-    </div>
-
-    <div>
+    
     <h5>{{ d.name }} </h5>
     <h5>{{ d.adress }} </h5>
     <h5>{{ d.description }} </h5>
+    </div>
+
+    
     
     
 {% endfor %}
+
+<a href="{% url 'go'%}">
+<button>
+    디자이너 생성
+</button>
+</a>
 {% endblock %}
