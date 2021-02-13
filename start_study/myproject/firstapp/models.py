@@ -4,7 +4,7 @@ from django.db import models
 class Designer(models.Model) :  #models.Model은 고정(형식)
     ''' django models define '''
     
-    image = models.ImageField(null=True, blank=True, upload_to ="images/")  #미디어에 있는 images에 올릴거다
+    image = models.ImageField(null=True, upload_to ="images/")  #미디어에 있는 images에 올릴거다
     name = models.CharField(max_length=50)
     adress = models.CharField(max_length=50)
     description = models.TextField()

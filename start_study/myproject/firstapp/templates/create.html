@@ -1,5 +1,5 @@
-<form action="{% url 'create' %}">
-
+<form action="{% url 'create' %}" >
+    {% csrf_token %}
     <p>디자이너 생성 페이지</p>
 
     <!--파일 첨부 -->
@@ -13,7 +13,7 @@
     <input type="text" name='discription' placeholder="설명">
     <div>
     <br>
-         <button class="btn btn-info btn-block my-4" type="submit">Create</button>
+         <button type="submit">Create</button>
        
     </div>
 

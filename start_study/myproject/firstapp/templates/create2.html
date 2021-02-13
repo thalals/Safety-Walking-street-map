@@ -1,0 +1,12 @@
+<form action="{% url 'create'  %}" method ='POST'  enctype = "multipart/form-data">  <!--파일을 전송할때 enctype 작성-->
+    {% csrf_token %}
+    <p>디자이너 생성 페이지</p>
+    {{ form.as_p }}
+  
+    <br>
+         <button type="submit">Create</button>
+       
+    </div>
+
+ 
+</form>
