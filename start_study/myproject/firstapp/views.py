@@ -26,7 +26,7 @@ def fbvCreate(request):
 
         people.save()
 
-        return redirect(reverse('designer'))
+        return redirect(reverse('designer'))     #reverse는 url의 name으로 연결시켜준다.
 
     return render(request,'create.html')
 
