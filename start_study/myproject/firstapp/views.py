@@ -1,6 +1,7 @@
-from django.shortcuts import render, HttpResponseRedirect
+from django.shortcuts import redirect, render, HttpResponseRedirect
 from django.views.generic.edit import UpdateView
 from . import models
+from django.urls import reverse #revese
 #CBV 사용
 from django.views.generic import CreateView,ListView, DeleteView
 
@@ -11,6 +12,25 @@ from django.views.generic import CreateView,ListView, DeleteView
 #     return render(request,'home.html', {'designer' : designer})
 
 
+#fbv Create
+def fbvCreate(request):
+    designer = models.Designer.objects.all()
+
+    people = models.Designer()
+    if request.method == 'POST':
+        print("객체생성")
+        people.name = request.POST['name']
+        people.adress = request.POST['adress']
+        people.discription = request.POST['discription']
+        people.image = request.FILES['image']
+
+        people.save()
+
+        return redirect(reverse('designer'))
+
+    return render(request,'create.html')
+
+        
 #cbv
 #Read(게시물 나열)
 class DesignerList(ListView):
