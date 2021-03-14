@@ -54,7 +54,9 @@
 				    startPoint = $("#fullAddr1").val();
 					endPoint = $("#fullAddr2").val();
                     is_danger=$("input:radio[name='pathfinder']:checked").val();
-					var pointArray=[startPoint,endPoint]
+					var pointArray=[startPoint,endPoint]    //출발지와 목적지 배열에
+                    // 성공하면 succ 호출 실패하면 fail
+                    // Full Text Geocoding (텍스트를 좌표로)
                     new Promise( (succ, fail)=>{
                         for(var i = 0; i < pointArray.length; i++){
 						(function(i) {
@@ -67,11 +69,12 @@
                                     "coordType" : "WGS84GEO",
                                     "fullAddr" : pointArray[i]
 						     },
-                            success: (result) => {
-                                var resultInfo = result.coordinateInfo; // .coordinate[0];
+                            success: (result) => {  //좌표변환 성공
+                                var resultInfo = result.coordinateInfo; // .coordinate[0]; 좌표정보
 							
 							
 							// 기존 마커 삭제
+							//marker1.setMap(null);
 							
 							
 							// 3.마커 찍기
@@ -329,11 +332,16 @@
 <img class="myloc" src="{% static 'img/myloc_icon.png' %}">
 <div class="map_act_btn_wrap clear_box" style="display:none;"></div>
 
-<div id="map_wrap" class="map_wrap3" style="display:none;">
+{% comment %} <div id="map_wrap" class="map_wrap3" style="display:none;">
     <div id="map_div"  style="display:none;" ></div>
+</div> {% endcomment %}
+
+<div id="map_wrap" class="map_wrap3">
+    <div id="map_div" ></div>
 </div>
 
 <div class="map" id="map" >
+    gdgd
     {{map|safe}}
  </div>
 
