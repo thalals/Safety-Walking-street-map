@@ -27,7 +27,7 @@ def thome(reqeust):
 
 def pathSetting(request):
     map = folium.Map(location=g.latlng,zoom_start=15, width='100%', height='30%',)
-    maps=map._repr_html_() 
+    maps=map._repr_html_()  #지도를 템플릿에 삽입하기위해 iframe이 있는 문자열로 반환 
     api_key="l7xxa033eab75a3a4ab38dd11a74fb8b87c6"
     return render(request,'thome.html',{'map':maps,'api_key':api_key})
 

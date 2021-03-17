@@ -49,255 +49,251 @@
 		// 마커 초기화
 		
 		$(".start_pathfinder").click(function() {
-					// 2. API 사용요청
+			// 2. API 사용요청
 					
-				    startPoint = $("#fullAddr1").val();
-					endPoint = $("#fullAddr2").val();
-                    is_danger=$("input:radio[name='pathfinder']:checked").val();
-					var pointArray=[startPoint,endPoint]    //출발지와 목적지 배열에
-                    // 성공하면 succ 호출 실패하면 fail
-                    // Full Text Geocoding (텍스트를 좌표로)
-                    new Promise( (succ, fail)=>{
-                        for(var i = 0; i < pointArray.length; i++){
-						(function(i) {
-                              when1=$.ajax({
-                                method : "GET",
-                                url : "https://apis.openapi.sk.com/tmap/geo/fullAddrGeo?version=1&format=json&callback=result",
-                                async : false,
-                                data : {
-                                    "appKey" : "l7xxa033eab75a3a4ab38dd11a74fb8b87c6",
-                                    "coordType" : "WGS84GEO",
-                                    "fullAddr" : pointArray[i]
-						     },
+			startPoint = $("#fullAddr1").val();     //출발지
+			endPoint = $("#fullAddr2").val();       //목적지
+            is_danger=$("input:radio[name='pathfinder']:checked").val();       //최단, 안전 체크
+			var pointArray=[startPoint,endPoint]    //출발지와 목적지 배열에
+            
+            // Full Text Geocoding (텍스트를 좌표로)
+            // 성공하면 succ 호출 실패하면 fail
+            new Promise( (succ, fail)=>{
+                for(var i = 0; i < pointArray.length; i++){
+                    //(fuction(i){})(i); 안에코드 바로 실행(IIFF) i는 argument(전달인자) 
+					(function(i) {
+                        when1=$.ajax({
+                            method : "GET",
+                            url : "https://apis.openapi.sk.com/tmap/geo/fullAddrGeo?version=1&format=json&callback=result",
+                            async : false,
+                            data : {
+                                "appKey" : "l7xxa033eab75a3a4ab38dd11a74fb8b87c6",
+                                "coordType" : "WGS84GEO",
+                                "fullAddr" : pointArray[i]
+						    },
                             success: (result) => {  //좌표변환 성공
                                 var resultInfo = result.coordinateInfo; // .coordinate[0]; 좌표정보
-							
-							
-							// 기존 마커 삭제
-							//marker1.setMap(null);
-							
-							
-							// 3.마커 찍기
-							// 검색 결과 정보가 없을 때 처리
-							if (resultInfo.coordinate.length == 0) {
-								$("#result").text(
-								"요청 데이터가 올바르지 않습니다.");
-							} else {
-								var lon, lat;
-								var resultCoordinate = resultInfo.coordinate[0];
-								if (resultCoordinate.lon.length > 0) {
-									// 구주소
-									lon = resultCoordinate.lon;
-									lat = resultCoordinate.lat;
-								} else { 
-									// 신주소
-									lon = resultCoordinate.newLon;
-									lat = resultCoordinate.newLat
-								}
-							
-								var lonEntr, latEntr;
-								
-								if (resultCoordinate.lonEntr == undefined && resultCoordinate.newLonEntr == undefined) {
-									lonEntr = 0;
-									latEntr = 0;
-								} else {
-									if (resultCoordinate.lonEntr.length > 0) {
-										lonEntr = resultCoordinate.lonEntr;
-										latEntr = resultCoordinate.latEntr;
-									} else {
-										lonEntr = resultCoordinate.newLonEntr;
-										latEntr = resultCoordinate.newLatEntr;
-									}
-								}
-									
-								var markerPosition = new Tmapv2.LatLng(Number(lat),Number(lon));
-								setPoint.push(markerPosition);
-			
 
-							} 
-                            
-                                succ(result);  //성공하면
-                            }, fail: (error) => {
+							    // 기존 마커 삭제
+							    //marker1.setMap(null);
+
+							    // 3.마커 찍기
+							    // 검색 결과 정보가 없을 때 처리
+							    if (resultInfo.coordinate.length == 0) {
+								    $("#result").text("요청 데이터가 올바르지 않습니다.");
+							    } 
+
+                                else {
+								    var lon, lat;
+								    var resultCoordinate = resultInfo.coordinate[0];
+								    
+									// 구주소
+                                    if (resultCoordinate.lon.length > 0) {
+									    lon = resultCoordinate.lon;
+									    lat = resultCoordinate.lat;
+								    } 
+									// 신주소
+                                    else { 
+									    lon = resultCoordinate.newLon;
+									    lat = resultCoordinate.newLat
+								    }
+							
+								    var lonEntr, latEntr;
+								
+								    if (resultCoordinate.lonEntr == undefined && resultCoordinate.newLonEntr == undefined) {
+									    lonEntr = 0;
+									    latEntr = 0;
+								    }
+                                    else {
+									    if (resultCoordinate.lonEntr.length > 0) {
+										    lonEntr = resultCoordinate.lonEntr;
+										    latEntr = resultCoordinate.latEntr;
+								    	}
+                                        else{
+										    lonEntr = resultCoordinate.newLonEntr;
+										    latEntr = resultCoordinate.newLatEntr;
+									    }
+								    }   
+									
+								    var markerPosition = new Tmapv2.LatLng(Number(lat),Number(lon));
+								    setPoint.push(markerPosition);
+							    } 
+                                succ(result);  //성공하면 검색결과 처리
+                            }, 
+                            fail: (error) => {
                                 console.log(error);
                                 map.setCenter(new Tmapv2.LatLng(37.570028, 126.986072));
 							    $("#result").html("");
                                 fail(error);  //실패하면
                             }
-                        });
+                        }); //여기까지가 when1 ajax
+
+                        //출발지 좌표와 목적지 좌표 설정
                         if (i==0){
                             startX=setPoint[0]._lng;
                             startY=setPoint[0]._lat;
-                        }else{
+                        }
+                        else{
                             endX=setPoint[1]._lng;
                             endY=setPoint[1]._lat;
                         }
-                
-                
-                         })(i);
-					
-					} 
-                    }).then((arg) =>{
-                        $.ajax({
-                            method:'POST',
-                            url:"{% url 'pathFinder' %}",
-                            async : false,
-                            data:{
-                                'start':startPoint,
-                                'end':endPoint,
-                                "startX" : startX,
-                                "startY" : startY,
-                                "endX" :endX,
-                                "endY" :endY,
-                                'csrfmiddlewaretoken': '{{ csrf_token }}'
-                            },
-                            dataType: "json",
-                            success : (result) =>{ 
-                                var container = L.DomUtil.get('map');
-                                if(container != null){
-                                container._leaflet_id = null;}
-                            var leaf_map = L.map('map').setView([startY,startX], 15);
-                            draw=result.result;
-                                
-                            },
-                        });
-                    }).then( (arg) =>{
-                        when2=$.ajax({
-                        method : "POST",
-                        url : "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1&format=json&callback=result",//
-                        data : {
-						"appKey" : "l7xxa033eab75a3a4ab38dd11a74fb8b87c6",
+
+                    })(i);  //여기까지 function(i)
+                } //for 닫기
+            //promise 성공적 실행후 then 순차 실행(text좌표 변환 후)
+            }).then((arg) =>{
+                $.ajax({
+                    method:'POST',
+                    url:"{% url 'pathFinder' %}", //클라이언트가 요청을 보낼 서버의 url 주소
+                    async : false,      
+                    data:{                  //http요청과 함께 서버로 보낼 데이터
+                        'start':startPoint, //출발지
+                        'end':endPoint,     //목적지
                         "startX" : startX,
-						"startY" : startY,
-						"endX" :endX,
-						"endY" :endY,
-						"reqCoordType" : "WGS84GEO",
-						"resCoordType" : "EPSG3857",
-						"startName" : "출발지",
-						"endName" : "도착지"},
-                            success: (result) => {
-                            var resultData = result.features;
-                            //기존 그려진 라인 & 마커가 있다면 초기화
-                            if (resultdrawArr.length > 0) {
-                                for ( var i in resultdrawArr) {
-                                    resultdrawArr[i]
-                                            .setMap(null);
-                                }
-                                resultdrawArr = [];
-                            }
+                        "startY" : startY,
+                        "endX" :endX,
+                        "endY" :endY,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    dataType: "json",  //서버에서 보내줄 데이터 타입
+                    success : (result) =>{ 
+                        var container = L.DomUtil.get('map');
+                        if(container != null){
+                            container._leaflet_id = null;
+                        }
+                        
+                        var leaf_map = L.map('map').setView([startY,startX], 15);
+                        draw=result.result;  
+                    },
+                });
+            }).then( (arg) =>{
+                when2=$.ajax({
+                method : "POST",
+                url : "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1&format=json&callback=result",//
+                data : {
+				    "appKey" : "l7xxa033eab75a3a4ab38dd11a74fb8b87c6",
+                    "startX" : startX,
+				    "startY" : startY,
+				    "endX" :endX,
+				    "endY" :endY,
+				    "reqCoordType" : "WGS84GEO",
+				    "resCoordType" : "EPSG3857",
+					"startName" : "출발지",
+					"endName" : "도착지"
+                },
+                    
+                success: (result) => {
+                    var resultData = result.features;
+                    //기존 그려진 라인 & 마커가 있다면 초기화
+                    if (resultdrawArr.length > 0) {
+                        for ( var i in resultdrawArr) {
+                            resultdrawArr[i].setMap(null);
+                        }
+                        resultdrawArr = [];
+                    }
                             
-                            drawInfoArr = [];
+                    drawInfoArr = [];
 
-                            for ( var i in resultData) { //for문 [S]
-                                var geometry = resultData[i].geometry;
-                                var properties = resultData[i].properties;
-                                var polyline_;
+                    for ( var i in resultData) { //for문 [S]
+                        var geometry = resultData[i].geometry;
+                        var properties = resultData[i].properties;
+                        var polyline_;
+                        
+                        if (geometry.type == "LineString") {
+                            for ( var j in geometry.coordinates) {
+                                // 경로들의 결과값(구간)들을 포인트 객체로 변환 
+                                var latlng = new Tmapv2.Point(
+                                geometry.coordinates[j][0],
+                                geometry.coordinates[j][1]);
                                 
-
-
-                                if (geometry.type == "LineString") {
-                                    for ( var j in geometry.coordinates) {
-                                        // 경로들의 결과값(구간)들을 포인트 객체로 변환 
-                                        var latlng = new Tmapv2.Point(
-                                                geometry.coordinates[j][0],
-                                                geometry.coordinates[j][1]);
-                                        // 포인트 객체를 받아 좌표값으로 변환
-                                        var convertPoint = new Tmapv2.Projection.convertEPSG3857ToWGS84GEO(
-                                                latlng);
-                                        // 포인트객체의 정보로 좌표값 변환 객체로 저장
-                                        var convertChange = new Tmapv2.LatLng(
-                                                convertPoint._lat,
-                                                convertPoint._lng);
-                                        // 배열에 담기
-                                        drawInfoArr.push(convertChange);
-                                    }
+                                // 포인트 객체를 받아 좌표값으로 변환
+                                var convertPoint = new Tmapv2.Projection.convertEPSG3857ToWGS84GEO(latlng);
+                                // 포인트객체의 정보로 좌표값 변환 객체로 저장
+                                var convertChange = new Tmapv2.LatLng(convertPoint._lat,convertPoint._lng);
+                                // 배열에 담기
+                                drawInfoArr.push(convertChange);
+                            }
                                     
-                                } 
-                            }//for문 [E]
+                        } 
+                    }//for문 [E]
                            
-                            }, fail: (error) => {
-                                //console.log(error);
-                            },complete:function(){
-                              
-                                if(is_danger=="최단"){
-                            $.ajax({
+                },
+                fail: (error) => {
+                    //console.log(error);
+                },complete:function(){
+                    if(is_danger=="최단"){
+                        $.ajax({
                             method:'POST',
                             url:"{% url 'normalPath' %}",
                             async : false,
-                        data : {
+                            data : {
                             'draw':String(drawInfoArr),
                             'csrfmiddlewaretoken': '{{ csrf_token }}'
-					},
+					        },
                             success: (result) => {
-                    
-                            var container = L.DomUtil.get('map');
+                                var container = L.DomUtil.get('map');
                                 if(container != null){
-                                container._leaflet_id = null;}
-                               
-                            var leaf_map=L.map('map').setView([startY,startX], 15);
+                                    container._leaflet_id = null;
+                                }
+                       
+                                var leaf_map=L.map('map').setView([startY,startX], 15);
                             
-                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                                        maxZoom: 18
-                                    }).addTo(leaf_map)
-                             markers = L.geoJSON(result.pistes).addTo(leaf_map);
-                             markers=L.marker([startY,startX]).addTo(leaf_map);
-                             markers=L.marker([endY,endX]).addTo(leaf_map);
-                           
-                            }, fail: (error) => {
+                                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom: 18}).addTo(leaf_map);
+                                markers = L.geoJSON(result.pistes).addTo(leaf_map);
+                                markers=L.marker([startY,startX]).addTo(leaf_map);
+                                markers=L.marker([endY,endX]).addTo(leaf_map);                           
+                            }, 
+                            fail: (error) => {
                                 console.log(error);
                             }
                         }); 
-                
-
+                        //안전일때
                         }else{
                             $.ajax({
-                            method:'POST',
-                            url:"{% url 'aStar' %}",
-                            async : false,
-                        data : { 'csrfmiddlewaretoken': '{{ csrf_token }}'},
-                            success: (result) => {
-
-                            var container = L.DomUtil.get('map');
-                                if(container != null){
-                                container._leaflet_id = null;} 
-                            var leaf_map=L.map('map').setView([startY,startX], 15);
-                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                                        maxZoom: 18
-                                    }).addTo(leaf_map); 
-                             markers = L.geoJSON(draw,{
-                                style: {
-                                        color: "red", 
-                                        weight: 5, 
-                                        fillColor: "red", 
-                                        fillOpacity: 0.2
-                                    }}).addTo(leaf_map);
-                                 markers = L.geoJSON(result.pistes).addTo(leaf_map);
-                                 markers=L.marker([startY,startX]).addTo(leaf_map);
-                                 markers=L.marker([endY,endX]).addTo(leaf_map);
-                            
-                            }, fail: (error) => {
-                                console.log(error);
-                            }
-                        }); 
-
+                                method:'POST',
+                                url:"{% url 'aStar' %}",
+                                async : false,
+                                data : { 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+                                
+                                success: (result) => {
+                                    var container = L.DomUtil.get('map');
+                                    if(container != null){
+                                        container._leaflet_id = null;
+                                    } 
+                                    var leaf_map=L.map('map').setView([startY,startX], 15);
+                                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 18}).addTo(leaf_map); 
+                                    
+                                    markers = L.geoJSON(draw,{
+                                        style: {
+                                            color: "red", 
+                                            weight: 5, 
+                                            fillColor: "red", 
+                                            fillOpacity: 0.2
+                                        }}).addTo(leaf_map);
+                                    markers = L.geoJSON(result.pistes).addTo(leaf_map);
+                                    markers=L.marker([startY,startX]).addTo(leaf_map);
+                                    markers=L.marker([endY,endX]).addTo(leaf_map);
+                                
+                                }, 
+                                fail: (error) => {
+                                    console.log(error);
+                                }
+                            }); 
                         }
 
-                            }
-                        }); 
-                
-                    }); 
+                    }
+                });// 최단, 안전
+
+            }); //경로받기 종료
 				
 				
-				});//button function
+		});//button function
 		
 			
 		// 4. 경로탐색 API 사용요청
 		
 
 	}
-   
-	
-	
-    
 	
 </script>
     
