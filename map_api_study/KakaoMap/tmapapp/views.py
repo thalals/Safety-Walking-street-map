@@ -12,9 +12,24 @@ import math
 import hexgrid # han : pip install hexgrid-py
 from .Astar import *
 
+import folium   #지도데이터 시각화
+from folium.features import CustomIcon
+
+import geocoder
+#import geojson
+import geodaisy.converters as convert
+#import geog
+g = geocoder.ip('me')   #현재 내위치
+
 # Create your views here.
 def thome(reqeust):
     return render (reqeust, "thome.html")
+
+def pathSetting(request):
+    map = folium.Map(location=g.latlng,zoom_start=15, width='100%', height='30%',)
+    maps=map._repr_html_() 
+    api_key="l7xxa033eab75a3a4ab38dd11a74fb8b87c6"
+    return render(request,'thome.html',{'map':maps,'api_key':api_key})
 
 def pathFinder(request): #위험지역 받는 함수
     global startX,startY,endX,endY,startGu,endGu
@@ -40,14 +55,14 @@ def pathFinder(request): #위험지역 받는 함수
                 endGu=find_gu
             else:
                 pass
-        female_start=Female2.objects.filter(female2_crime_type="전체_전체",gu=startGu).all()
-        female_end=Female2.objects.filter(female2_crime_type="전체_전체",gu=endGu).all()
-        female_total=female_start.union(female_end,all=False)
-        for loc in female_total:
-            gis= Geometry(loc.female2_crime_loc.hex()[8:])
-            contain_coordinate=shape(gis.geojson)
-            crime_location={"type":"Feature","geometry":gis.geojson}
-            loc_list.append(crime_location)
+        # female_start=Female2.objects.filter(female2_crime_type="전체_전체",gu=startGu).all()
+        # female_end=Female2.objects.filter(female2_crime_type="전체_전체",gu=endGu).all()
+        # female_total=female_start.union(female_end,all=False)
+        # for loc in female_total:
+        #     gis= Geometry(loc.female2_crime_loc.hex()[8:])
+        #     contain_coordinate=shape(gis.geojson)
+        #     crime_location={"type":"Feature","geometry":gis.geojson}
+        #     loc_list.append(crime_location)
     pistes = {"type":"FeatureCollection","features":loc_list}
     return HttpResponse(json.dumps({'result':pistes}),content_type="application/json")
 
