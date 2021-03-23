@@ -89,7 +89,7 @@ def normalPath(request):
     return HttpResponse(json.dumps({'pistes':pistes}),content_type="application/json")
 
 def aStar(request):
-    global startGu,endGu
+    global startGu,endGu    #global 전역변수
     center=hexgrid.Point((float(startX)+float(endX))/2,(float(startY)+float(endY))/2)
     rate = 110.574 / (111.320 * math.cos(37.55582994870823 * math.pi / 180))
     grid = hexgrid.Grid(hexgrid.OrientationFlat, center, Point(rate*0.00015,0.00015), morton.Morton(2, 32))

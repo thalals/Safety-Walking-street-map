@@ -212,6 +212,7 @@
                                 var convertChange = new Tmapv2.LatLng(convertPoint._lat,convertPoint._lng);
                                 // 배열에 담기
                                 drawInfoArr.push(convertChange);
+                                print(drawInfoArr);
                             }
                                     
                         } 
@@ -225,8 +226,8 @@
                         $.ajax({
                             method:'POST',
                             url:"{% url 'normalPath' %}",
-                            async : false,
-                            data : {
+                            async : false,  //ajax결과값 판단 후 함수 진행
+                            data : {        //서버에 보낼 데이터
                             'draw':String(drawInfoArr),
                             'csrfmiddlewaretoken': '{{ csrf_token }}'
 					        },
@@ -248,52 +249,50 @@
                             }
                         }); 
                         //안전일때
-                        }else{
-                            $.ajax({
-                                method:'POST',
-                                url:"{% url 'aStar' %}",
-                                async : false,
-                                data : { 'csrfmiddlewaretoken': '{{ csrf_token }}'},
-                                
-                                success: (result) => {
-                                    var container = L.DomUtil.get('map');
-                                    if(container != null){
-                                        container._leaflet_id = null;
-                                    } 
-                                    var leaf_map=L.map('map').setView([startY,startX], 15);
-                                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 18}).addTo(leaf_map); 
-                                    
-                                    markers = L.geoJSON(draw,{
-                                        style: {
-                                            color: "red", 
-                                            weight: 5, 
-                                            fillColor: "red", 
-                                            fillOpacity: 0.2
-                                        }}).addTo(leaf_map);
-                                    markers = L.geoJSON(result.pistes).addTo(leaf_map);
-                                    markers=L.marker([startY,startX]).addTo(leaf_map);
-                                    markers=L.marker([endY,endX]).addTo(leaf_map);
-                                
-                                }, 
-                                fail: (error) => {
-                                    console.log(error);
-                                }
-                            }); 
-                        }
-
+                    }else{
+                        $.ajax({
+                            method:'POST',
+                            url:"{% url 'aStar' %}",
+                            async : false,
+                            data : { 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+                            
+                            success: (result) => {
+                            var container = L.DomUtil.get('map');
+                            if(container != null){
+                                container._leaflet_id = null;
+                            } 
+                            var leaf_map=L.map('map').setView([startY,startX], 15);
+                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 18}).addTo(leaf_map); 
+                            
+                            markers = L.geoJSON(draw,{
+                            style: {
+                                color: "red", 
+                                weight: 5, 
+                                fillColor: "red", 
+                                fillOpacity: 0.2
+                            }}).addTo(leaf_map);
+                            markers = L.geoJSON(result.pistes).addTo(leaf_map);
+                            markers=L.marker([startY,startX]).addTo(leaf_map);
+                            markers=L.marker([endY,endX]).addTo(leaf_map);
+                            
+                            }, 
+                            fail: (error) => {
+                                console.log(error);
+                            }
+                        }); 
                     }
-                });// 최단, 안전
 
-            }); //경로받기 종료
+                }
+            });// 최단, 안전
+
+        }); //경로받기 종료
 				
 				
-		});//button function
+	});//button function
 		
 			
-		// 4. 경로탐색 API 사용요청
-		
-
-	}
+	// 4. 경로탐색 API 사용요청
+}
 	
 </script>
     
