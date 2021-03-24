@@ -47,7 +47,7 @@ def pathFinder(request): #위험지역 받는 함수
         endX=request.POST.get('endX')
         endY=request.POST.get('endY')
         for find_gu in gu_list:
-            if find_gu in startPoint:
+            if find_gu in startPoint:   #출발지 나 목적지가 gu_list에 있다면
                 startGu=find_gu
             else:
                 pass
@@ -63,8 +63,8 @@ def pathFinder(request): #위험지역 받는 함수
         #     contain_coordinate=shape(gis.geojson)
         #     crime_location={"type":"Feature","geometry":gis.geojson}
         #     loc_list.append(crime_location)
-    pistes = {"type":"FeatureCollection","features":loc_list}
-    return HttpResponse(json.dumps({'result':pistes}),content_type="application/json")
+    pistes = {"type":"FeatureCollection","features":loc_list}   #geoJason data:loc_list
+    return HttpResponse(json.dumps({'result':pistes}),content_type="application/json")  #json.dump : python -> json object
 
 def normalPath(request):
     global gu_coordinate,startX,startY,endX,endY
@@ -73,12 +73,14 @@ def normalPath(request):
     line=""
     count=0
     if request.method=="POST":
-        pistes=request.POST.get('draw')
+        pistes=request.POST.get('draw') #경로 좌표 정보(Point, Line)
         pist=pistes.split(",")
+
         for p in pist:
-            if (pist.index(p)%2==0):
-                x=p
-                y=pist[pist.index(p)+1]
+            #pist.index(p) - p의 위치(index) 반환
+            if (pist.index(p)%2==0):    #Point 일때
+                x=p     #lat
+                y=pist[pist.index(p)+1] #lng
                 point=[float(y),float(x)]
                 pointlist.append(point)
 
