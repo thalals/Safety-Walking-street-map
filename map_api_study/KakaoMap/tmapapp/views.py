@@ -1,6 +1,7 @@
 from django.http.response import HttpResponse
 from django.shortcuts import render
 import json
+from .models import *
 
 from shapely import *
 from shapely.geometry import *
@@ -10,6 +11,8 @@ from plpygis import Geometry
 
 import math
 import hexgrid # han : pip install hexgrid-py
+import morton   #hexgrid package - pip install morton-py..?
+
 from .Astar import *
 
 import folium   #지도데이터 시각화
@@ -87,24 +90,27 @@ def normalPath(request):
         
     crime_location={"type":"Feature","geometry":{"type":"LineString","coordinates":pointlist}}
   
-    pistes = {"type":"FeatureCollection","features":[crime_location]}
+    pistes = {"type":"FeatureCollection","features":[crime_location]}   #경로 정보
     return HttpResponse(json.dumps({'pistes':pistes}),content_type="application/json")
 
+#hexgrid : 16진수 그리드
 def aStar(request):
     global startGu,endGu    #global 전역변수
-    center=hexgrid.Point((float(startX)+float(endX))/2,(float(startY)+float(endY))/2)
-    rate = 110.574 / (111.320 * math.cos(37.55582994870823 * math.pi / 180))
-    grid = hexgrid.Grid(hexgrid.OrientationFlat, center, Point(rate*0.00015,0.00015), morton.Morton(2, 32))
-    sPoint=grid.hex_at(Point(float(startX),float(startY)))
-    ePoint=grid.hex_at(Point(float(endX),float(endY)))
-    map_size=max(abs(sPoint.q),abs(sPoint.r))
+    center=hexgrid.Point((float(startX)+float(endX))/2,(float(startY)+float(endY))/2)   #중앙
+    rate = 110.574 / (111.320 * math.cos(37.55582994870823 * math.pi / 180))   #서울의 중앙을 잡고, 경도값에 대한 비율     
+    grid = hexgrid.Grid(hexgrid.OrientationFlat, center, Point(rate*0.00015,0.00015), morton.Morton(2, 32)) #Point = Size
+    sPoint=grid.hex_at(Point(float(startX),float(startY)))      #출발지 Point -> hex좌표
+    ePoint=grid.hex_at(Point(float(endX),float(endY)))          #목적지
+    map_size=max(abs(sPoint.q),abs(sPoint.r))   #열col(q) 행row(r)
     road1=Roadtohexgrid.objects.filter(is_danger=1,hexgrid_gu=startGu).all()
     road2=Roadtohexgrid.objects.filter(is_danger=1,hexgrid_gu=endGu).all()
-    total_road=road1.union(road2,all=False)
+    total_road=road1.union(road2,all=False) #road1, road2 union
+
     wall1=Roadtohexgrid.objects.filter(is_danger=0,hexgrid_gu=startGu).all()
     wall2=Roadtohexgrid.objects.filter(is_danger=0,hexgrid_gu=endGu).all()
     total_wall=wall1.union(wall2,all=False)
-    wh=GridWithWeights(layout_flat,Point(rate*0.00015,0.00015),center,map_size+5)
+
+    wh=GridWithWeights(layout_flat,Point(rate*0.00015,0.00015),center,map_size+5)   #Astart.py gird Cost?
     for r in total_road:
         gis= Geometry(r.hexgrid_loc.hex()[8:])
         h=grid.hex_at(shape(gis.geojson))
