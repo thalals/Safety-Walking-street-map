@@ -40,7 +40,7 @@ def pathFinder(request): #위험지역 받는 함수
     '동대문구','중랑구','성북구','강북구','도봉구',
     '노원구','은평구','서대문구','마포구','양천구',
     '강서구','구로구','금천구','영등포구','동작구',
-    '관악구','서초구','강남구','송파구','강동구',]
+    '관악구','서초구','강남구','송파구','강동구','부평구',]
     loc_list=[]
     if request.method=="POST":
         startPoint=request.POST.get('start')
@@ -83,7 +83,10 @@ def normalPath(request):
             #pist.index(p) - p의 위치(index) 반환
             if (pist.index(p)%2==0):    #Point 일때
                 x=p     #lat
-                y=pist[pist.index(p)+1] #lng
+                print(len(pist))
+                print(pist.index(p))
+                # print(pist)
+                y=pist[(pist.index(p))+1] #lng
                 point=[float(y),float(x)]
                 pointlist.append(point)
 
@@ -95,7 +98,8 @@ def normalPath(request):
 
 #hexgrid : 16진수 그리드
 def aStar(request):
-    global startGu,endGu    #global 전역변수
+    global startGu
+    global endGu   #global 전역변수
     center=hexgrid.Point((float(startX)+float(endX))/2,(float(startY)+float(endY))/2)   #중앙
     rate = 110.574 / (111.320 * math.cos(37.55582994870823 * math.pi / 180))   #서울의 중앙을 잡고, 경도값에 대한 비율     
     grid = hexgrid.Grid(hexgrid.OrientationFlat, center, Point(rate*0.00015,0.00015), morton.Morton(2, 32)) #Point = Size
