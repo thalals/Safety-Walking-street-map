@@ -1,6 +1,16 @@
 from django.db import models
 
 # Create your models here.
+#가로등 데이터(현재 광진구)
+class Lamp(models.Model):
+    name = models.AutoField(primary_key=True)
+    lat = models.FloatField()
+    lon = models.FloatField()
+
+    class Meta:
+        managed = False
+        db_table = 'lamp'
+
 class Roadtohexgrid(models.Model):
     objects = models.Manager()
     hexgrid_pk = models.AutoField(primary_key=True)
@@ -13,3 +23,4 @@ class Roadtohexgrid(models.Model):
     class Meta:
         managed = False
         db_table = 'roadToHexgrid'
+
