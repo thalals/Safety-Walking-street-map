@@ -40,7 +40,7 @@ def pathFinder(request): #위험지역 받는 함수
     '동대문구','중랑구','성북구','강북구','도봉구',
     '노원구','은평구','서대문구','마포구','양천구',
     '강서구','구로구','금천구','영등포구','동작구',
-    '관악구','서초구','강남구','송파구','강동구','부평구',]
+    '관악구','서초구','강남구','송파구','강동구','부평구','',]
     loc_list=[]
     if request.method=="POST":
         startPoint=request.POST.get('start')
@@ -67,6 +67,9 @@ def pathFinder(request): #위험지역 받는 함수
         #     crime_location={"type":"Feature","geometry":gis.geojson}
         #     loc_list.append(crime_location)
     pistes = {"type":"FeatureCollection","features":loc_list}   #geoJason data:loc_list
+    # print(pistes)
+    # print(startGu)
+    # print(endGu)
     return HttpResponse(json.dumps({'result':pistes}),content_type="application/json")  #json.dump : python -> json object
 
 def normalPath(request):
@@ -83,9 +86,6 @@ def normalPath(request):
             #pist.index(p) - p의 위치(index) 반환
             if (pist.index(p)%2==0):    #Point 일때
                 x=p     #lat
-                print(len(pist))
-                print(pist.index(p))
-                # print(pist)
                 y=pist[(pist.index(p))+1] #lng
                 point=[float(y),float(x)]
                 pointlist.append(point)
@@ -96,16 +96,48 @@ def normalPath(request):
     pistes = {"type":"FeatureCollection","features":[crime_location]}   #경로 정보
     return HttpResponse(json.dumps({'pistes':pistes}),content_type="application/json")
 
+#그리드 그려보자
+def gird_draw(request):
+
+    print(startY, startX)   #lon 경도
+    print(endY, endX)       #lat 위도
+
+    lamp = Lamp.objects.filter(lon__range=(endX,startX),lat__range=(endY,startY)).order_by('lat')
+    # lamp.order_by('lon')
+    print(len(lamp))
+
+    plist=[]
+
+    for l in lamp :
+        print(l.lon)
+        point=[float(l.lon),float(l.lat)]
+
+        plist.append(point)
+
+    
+    crime_location={"type":"Feature","geometry":{"type":"LineString","coordinates":plist}}
+    pistes = {"type":"FeatureCollection","features":[crime_location]}
+    
+    return HttpResponse(json.dumps({'pistes':pistes}),content_type="application/json")
+
+
 #hexgrid : 16진수 그리드
 def aStar(request):
-    global startGu
-    global endGu   #global 전역변수
+    # global startGu
+    # global endGu   #global 전역변수
+    print(startGu)
+    print(endGu)
     center=hexgrid.Point((float(startX)+float(endX))/2,(float(startY)+float(endY))/2)   #중앙
     rate = 110.574 / (111.320 * math.cos(37.55582994870823 * math.pi / 180))   #서울의 중앙을 잡고, 경도값에 대한 비율     
     grid = hexgrid.Grid(hexgrid.OrientationFlat, center, Point(rate*0.00015,0.00015), morton.Morton(2, 32)) #Point = Size
     sPoint=grid.hex_at(Point(float(startX),float(startY)))      #출발지 Point -> hex좌표
     ePoint=grid.hex_at(Point(float(endX),float(endY)))          #목적지
     map_size=max(abs(sPoint.q),abs(sPoint.r))   #열col(q) 행row(r)
+
+    print(sPoint)
+    print(ePoint)
+    print(center)
+    print(map_size)
     road1=Roadtohexgrid.objects.filter(is_danger=1,hexgrid_gu=startGu).all()
     road2=Roadtohexgrid.objects.filter(is_danger=1,hexgrid_gu=endGu).all()
     total_road=road1.union(road2,all=False) #road1, road2 union
@@ -119,12 +151,12 @@ def aStar(request):
         gis= Geometry(r.hexgrid_loc.hex()[8:])
         h=grid.hex_at(shape(gis.geojson))
         wh.weights[(h.q,h.r)]=1
-    
+      
     for w in total_wall:
         gis= Geometry(w.hexgrid_loc.hex()[8:])
         h=grid.hex_at(shape(gis.geojson))
         wh.weights[(h.q,h.r)]=200
-    
+  
     start, goal = (sPoint.q,sPoint.r), (ePoint.q,ePoint.r)
     came_from, cost_so_far = a_star_search(wh, start, goal)
     pointList=reconstruct_path(came_from, start=start, goal=goal)

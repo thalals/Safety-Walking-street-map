@@ -255,7 +255,7 @@
                             }
                         }); 
                         //안전일때
-                    }else if(is_danger=="안전"){
+                    }else{
                         $.ajax({
                             method:'POST',
                             url:"{% url 'aStar' %}",
@@ -286,37 +286,6 @@
                                 console.log(error);
                             }
                         }); 
-                    }else if(is_danger=="가로등"){
-                        $.ajax({
-                            method:'POST',
-                            url:"{% url 'grid_draw' %}",
-                            async : false,
-                            data : { 'csrfmiddlewaretoken': '{{ csrf_token }}'},
-                            
-                            success: (result) => {
-                            var container = L.DomUtil.get('map');
-                            if(container != null){
-                                container._leaflet_id = null;
-                            } 
-                            var leaf_map=L.map('map').setView([startY,startX], 15);
-                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 18}).addTo(leaf_map); 
-                            
-                            markers = L.geoJSON(draw,{
-                            style: {
-                                color: "red", 
-                                weight: 5, 
-                                fillColor: "red", 
-                                fillOpacity: 0.2
-                            }}).addTo(leaf_map);
-                            markers = L.geoJSON(result.pistes).addTo(leaf_map); //Line
-                            markers=L.marker([startY,startX]).addTo(leaf_map);
-                            markers=L.marker([endY,endX]).addTo(leaf_map);
-                            
-                            }, 
-                            fail: (error) => {
-                                console.log(error);
-                            }
-                        });
                     }
 
                 }
@@ -357,10 +326,6 @@
         |
         <input type="radio" id="radio2" name="pathfinder" value="최단">
         <label for ="radio2">최단</label>
-
-        <input type="radio" id="radio3" name="pathfinder" value="가로등">
-        <label for ="radio3">가로등</label>
-
         <!--<button id="btn_select">적용하기</button>-->
     </div>
 </div>

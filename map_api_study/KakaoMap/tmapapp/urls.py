@@ -9,5 +9,6 @@ urlpatterns = [
     path('hardPath/',views.aStar,name='aStar'),#우회 길찾기
     path('tsample',views.tsample, name='tsample'),
 
+    path('grid_draw/',views.gird_draw, name='grid_draw') #그리드 그리기
 
 ]

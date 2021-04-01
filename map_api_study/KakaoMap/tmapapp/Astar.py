@@ -7,16 +7,18 @@ import numpy as np
 from queue import PriorityQueue
 Location = TypeVar('Location')
 GridLocation = Tuple[int, int]
-Orientation = collections.namedtuple("Orientation", ["f0", "f1", "f2", "f3", "b0", "b1", "b2", "b3", "start_angle"])
+Orientation = collections.namedtuple("Orientation", ["f0", "f1", "f2", "f3", "b0", "b1", "b2", "b3", "start_angle"]) # 16 진 좌표와 화면 좌표를 변환
 Point = collections.namedtuple("Point", ["x", "y"])
 #Layout = collections.namedtuple("Layout", ["orientation", "size", "origin"])
 
+#방향은 2개뿐이라 상수구현
 layout_pointy = Orientation(math.sqrt(3.0), math.sqrt(3.0) / 2.0, 0.0, 3.0 / 2.0, math.sqrt(3.0) / 3.0, -1.0 / 3.0, 0.0, 2.0 / 3.0, 0.5)
 layout_flat = Orientation(3.0 / 2.0, 0.0, math.sqrt(3.0) / 2.0, math.sqrt(3.0), 2.0 / 3.0, 0.0, -1.0 / 3.0, math.sqrt(3.0) / 3.0, 0.0)
 
-
+# HexGrid 
 rate = 110.574 / (111.320 * math.cos(37.550396 * math.pi / 180))
 class HexGrid:
+    #Layout
     def __init__(self,orientation: Orientation , size: Point, origin: Point,radius :int):
         self.orientation=orientation
         self.size=size
@@ -40,17 +42,17 @@ class HexGrid:
         r = M.b2 * pt.x + M.b3 * pt.y
         return hexgrid.Hex(q,r)
     
-    def in_bounds(self, id: GridLocation) -> bool:
+    def in_bounds(self, id: GridLocation) -> bool: 
         (x, y) = id
         return -self.radius<= x < self.radius and -self.radius<= y < self.radius
-    
+
     def passable(self, id: GridLocation) -> bool:
         return id not in self.walls
     
     def neighbors(self, id: GridLocation) -> Iterator[GridLocation]:
         (x, y) = id
-        neighbors = [(x+1, y), (x+1, y-1), (x, y-1), (x-1, y),(x-1,y+1),(x,y+1)]
-        if (x + y) % 2 == 0: neighbors.reverse() # aesthetics
+        neighbors = [(x+1, y), (x+1, y-1), (x, y-1), (x-1, y),(x-1,y+1),(x,y+1)]    #인접한 6개의 방향
+        if (x + y) % 2 == 0: neighbors.reverse()  # aesthetics
         results = filter(self.in_bounds, neighbors)
         results = filter(self.passable, results)
         return results
@@ -65,8 +67,7 @@ class GridWithWeights(HexGrid):
     def cost(self, from_node: GridLocation, to_node: GridLocation) -> float:
         return self.weights.get(to_node,200)
 
-def reconstruct_path(came_from: Dict[Location, Location],
-                     start: Location, goal: Location) -> List[Location]:
+def reconstruct_path(came_from: Dict[Location, Location],start: Location, goal: Location) -> List[Location]:
     current: Location = goal
     path: List[Location] = []
     while current != start:
