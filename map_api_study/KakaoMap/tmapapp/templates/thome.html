@@ -291,7 +291,10 @@
                             method:'POST',
                             url:"{% url 'grid_draw' %}",
                             async : false,
-                            data : { 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+                            data : { 
+                                'draw':String(drawInfoArr), //최단거리 정보
+                                'csrfmiddlewaretoken': '{{ csrf_token }}'
+                            },
                             
                             success: (result) => {
                             var container = L.DomUtil.get('map');

@@ -1,3 +1,4 @@
+import re
 from django.http.response import HttpResponse
 from django.shortcuts import render
 import json
@@ -11,7 +12,7 @@ from plpygis import Geometry
 
 import math
 import hexgrid # han : pip install hexgrid-py
-import morton   #hexgrid package - pip install morton-py..?
+import morton   #hexgrid package - pip install morton-py..? already installe during installation hexgrid-py
 
 from .Astar import *
 
@@ -130,14 +131,52 @@ def aStar(request):
     center=hexgrid.Point((float(startX)+float(endX))/2,(float(startY)+float(endY))/2)   #중앙
     rate = 110.574 / (111.320 * math.cos(37.55582994870823 * math.pi / 180))   #서울의 중앙을 잡고, 경도값에 대한 비율     
     grid = hexgrid.Grid(hexgrid.OrientationFlat, center, Point(rate*0.00015,0.00015), morton.Morton(2, 32)) #Point = Size
-    sPoint=grid.hex_at(Point(float(startX),float(startY)))      #출발지 Point -> hex좌표
+    sPoint=grid.hex_at(Point(float(startX),float(startY)))      # hex_at : point to hex -> 출발지 Point -> hex좌표
     ePoint=grid.hex_at(Point(float(endX),float(endY)))          #목적지
     map_size=max(abs(sPoint.q),abs(sPoint.r))   #열col(q) 행row(r)
 
+    print(center)
     print(sPoint)
     print(ePoint)
-    print(center)
+    print(grid)
     print(map_size)
+
+    #return center extends neighbor : hex list
+    neighbor=[]
+    neighbor =grid.hex_neighbors(grid.hex_at(center),1) #hex_neighbor : type(Hex, int) -> list
+
+    print(len(neighbor))
+
+    #test make region
+    regionlist =[]
+
+    for ne in neighbor :
+        regionlist.append(grid._make_region(grid.hex_corners(ne)))
+    
+    print(len(regionlist))
+    for region in regionlist :
+        print(region.hexes)
+
+
+    #test make hex to corner
+    cornerlist = []
+    for item in neighbor:
+        cornerlist.append(grid.hex_corners(item))
+
+    # item:list (안에 6개의 corner)
+    print(len(cornerlist))
+    for item in cornerlist:
+        print(item)
+        print()
+        
+        
+
+    # for a in region :
+    #     print(region)
+
+    # for a in neighbor :
+    #     print(a)
+    
     road1=Roadtohexgrid.objects.filter(is_danger=1,hexgrid_gu=startGu).all()
     road2=Roadtohexgrid.objects.filter(is_danger=1,hexgrid_gu=endGu).all()
     total_road=road1.union(road2,all=False) #road1, road2 union
