@@ -7,7 +7,7 @@ import numpy as np
 from queue import PriorityQueue
 Location = TypeVar('Location')
 GridLocation = Tuple[int, int]
-Orientation = collections.namedtuple("Orientation", ["f0", "f1", "f2", "f3", "b0", "b1", "b2", "b3", "start_angle"]) # 16 진 좌표와 화면 좌표를 변환
+Orientation = collections.namedtuple("Orientation", ["f0", "f1", "f2", "f3", "b0", "b1", "b2", "b3", "start_angle"]) # 16 진 좌표와 화면 좌표를 변환 f(행렬)<->b(역행렬)
 Point = collections.namedtuple("Point", ["x", "y"])
 #Layout = collections.namedtuple("Layout", ["orientation", "size", "origin"])
 

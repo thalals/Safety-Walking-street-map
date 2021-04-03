@@ -30,6 +30,10 @@
     var resultInfo;
     var resultData;
 
+    var tempdata;
+    var linedata;
+    var lamp;
+    var lamplist =[];
     $(document).ready(function () {
         var h=$( window ).height();     
         $('#map_div', this).css('height','100%');
@@ -246,7 +250,10 @@
                                 var leaf_map=L.map('map').setView([startY,startX], 15); //setview [위도,경도], 줌레벨
                             
                                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom: 18}).addTo(leaf_map);    //tileLayer의 {s}는 서버 도메인 , {z},{x},{y}는 타일 지도의 위치, addTo 매소드로 map에 타일 지도를 추가
-                                markers = L.geoJSON(result.pistes).addTo(leaf_map); //Line
+
+                                for(lamp in result.pistes){
+                                    markers = L.geoJSON(result.pistes).addTo(leaf_map); //Line   
+                                }
                                 markers=L.marker([startY,startX]).addTo(leaf_map);
                                 markers=L.marker([endY,endX]).addTo(leaf_map);                           
                             }, 
@@ -303,7 +310,6 @@
                             } 
                             var leaf_map=L.map('map').setView([startY,startX], 15);
                             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 18}).addTo(leaf_map); 
-                            
                             markers = L.geoJSON(draw,{
                             style: {
                                 color: "red", 
@@ -311,7 +317,22 @@
                                 fillColor: "red", 
                                 fillOpacity: 0.2
                             }}).addTo(leaf_map);
-                            markers = L.geoJSON(result.pistes).addTo(leaf_map); //Line
+                            
+                            //hex line (시각화)
+                            //markers = L.geoJSON(result.hex_polygon).addTo(leaf_map); //hex_line(polygon)
+                            
+                            //가로등 출력(시각화)
+                            {% comment %} tempdata = result.pistes.features.;
+                            for(var i in tempdata){
+                                var geometry = tempdata[i].geometry;  //좌표정보 ()
+                                
+                                lamplist.push(i);
+                                for(var j in geometry.coordinates){
+                                //    markers = L.marker([geometry.coordinates[j][1],geometry.coordinates[j][0]).addTo(leaf_map);
+                                }
+                            } {% endcomment %}
+                            
+                            //markers = L.geoJSON(result.pistes).addTo(leaf_map);
                             markers=L.marker([startY,startX]).addTo(leaf_map);
                             markers=L.marker([endY,endX]).addTo(leaf_map);
                             

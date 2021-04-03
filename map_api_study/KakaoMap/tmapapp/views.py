@@ -2,6 +2,8 @@ import re
 from django.http.response import HttpResponse
 from django.shortcuts import render
 import json
+
+from numpy import polyint
 from .models import *
 
 from shapely import *
@@ -41,7 +43,7 @@ def pathFinder(request): #위험지역 받는 함수
     '동대문구','중랑구','성북구','강북구','도봉구',
     '노원구','은평구','서대문구','마포구','양천구',
     '강서구','구로구','금천구','영등포구','동작구',
-    '관악구','서초구','강남구','송파구','강동구','부평구','',]
+    '관악구','서초구','강남구','송파구','강동구','부평구','소하동','일직동',]
     loc_list=[]
     if request.method=="POST":
         startPoint=request.POST.get('start')
@@ -99,10 +101,37 @@ def normalPath(request):
 
 #그리드 그려보자
 def gird_draw(request):
+    #-----------------return hex corner ---------------------
+    center=hexgrid.Point((float(startX)+float(endX))/2,(float(startY)+float(endY))/2)   #중앙
+    rate = 110.574 / (111.320 * math.cos(37.55582994870823 * math.pi / 180))   #서울의 중앙을 잡고, 경도값에 대한 비율     
+    grid = hexgrid.Grid(hexgrid.OrientationFlat, center, Point(rate*0.00015,0.00015), morton.Morton(2, 32)) #Point = Size
+    sPoint=grid.hex_at(Point(float(startX),float(startY)))      # hex_at : point to hex -> 출발지 Point -> hex좌표
+    ePoint=grid.hex_at(Point(float(endX),float(endY)))          #목적지
+    map_size=max(abs(sPoint.q),abs(sPoint.r))   #열col(q) 행row(r)
+    
+    
+    #return center extends neighbor : hex list
+    neighbor=[]
+    neighbor =grid.hex_neighbors(grid.hex_at(center),map_size) #hex_neighbor : type(Hex, int) -> list
 
-    print(startY, startX)   #lon 경도
-    print(endY, endX)       #lat 위도
+    print(len(neighbor))
+    #test make hex to corner
+    cornerlist = []
+    for item in neighbor:
+        cornerlist.append(grid.hex_corners(item))
 
+    polylist =[]
+    for hex in cornerlist:
+      for corner in hex :
+        polylist.append(corner)
+
+    print(len(polylist))
+
+    hex_line={"type":"Feature","geometry":{"type":"LineString","coordinates":polylist}}
+    hex_polygon = {"type":"FeatureCollection","features":[hex_line]}
+
+    # print(hex_polygon)
+    #------------------return lamp data --------------------    
     lamp = Lamp.objects.filter(lon__range=(endX,startX),lat__range=(endY,startY)).order_by('lat')
     # lamp.order_by('lon')
     print(len(lamp))
@@ -110,16 +139,16 @@ def gird_draw(request):
     plist=[]
 
     for l in lamp :
-        print(l.lon)
+        # print(l.lon)
         point=[float(l.lon),float(l.lat)]
 
         plist.append(point)
 
     
-    crime_location={"type":"Feature","geometry":{"type":"LineString","coordinates":plist}}
-    pistes = {"type":"FeatureCollection","features":[crime_location]}
+    lamp_location={"type":"Feature","geometry":{"type":"Point","coordinates":plist}}
+    pistes = {"type":"FeatureCollection","features":[lamp_location]}
     
-    return HttpResponse(json.dumps({'pistes':pistes}),content_type="application/json")
+    return HttpResponse(json.dumps({'pistes' : pistes, 'hex_polygon':hex_polygon}),content_type="application/json")
 
 
 #hexgrid : 16진수 그리드
@@ -154,8 +183,8 @@ def aStar(request):
         regionlist.append(grid._make_region(grid.hex_corners(ne)))
     
     print(len(regionlist))
-    for region in regionlist :
-        print(region.hexes)
+    # for region in regionlist :
+    #     print(region.hexes)
 
 
     #test make hex to corner
@@ -164,10 +193,10 @@ def aStar(request):
         cornerlist.append(grid.hex_corners(item))
 
     # item:list (안에 6개의 corner)
-    print(len(cornerlist))
-    for item in cornerlist:
-        print(item)
-        print()
+    # print(cornerlist)
+    # for item in cornerlist:
+    #     print(item)
+    #     print()
         
         
 
