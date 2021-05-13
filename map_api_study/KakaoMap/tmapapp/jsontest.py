@@ -27,5 +27,5 @@ jsonShow_Gline()
 print("경기도 전체 라인\n첫번째 배열 : ",coordinates_Array[0])
 print("전체 길이 : ",len(coordinates_Array))
 
-# print("고속도로, 대로 제거 라인\n첫번째 배열 : ",coordinates_part[0])
+print("고속도로, 대로 제거 라인\n첫번째 배열 : ",coordinates_part[0])
 print("제거 라인 길이 : ",len(coordinates_part))
