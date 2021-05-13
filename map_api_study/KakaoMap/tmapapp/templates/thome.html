@@ -318,21 +318,54 @@
                                 fillOpacity: 0.2
                             }}).addTo(leaf_map);
                             
+                            //가로등 icon
+                            var lampicon = L.icon({
+                                iconUrl : '../static/img/lamp_icon.png',
+                                iconSize: [45, 20], //가로, 세로
+                            });
+                            
+                            //가로등 출력(시각화)                            
+                            //for each (object)
+                            tempdata = result.pistes['features'][0]['geometry']['coordinates'];
+                            $.each(tempdata,function(index,point){
+                                markers = L.marker([point[1],point[0]], { icon : lampicon}).addTo(leaf_map); // y(위도) x(경도)
+                            });
+                            markers=L.marker([startY,startX]).addTo(leaf_map);
+                            markers=L.marker([endY,endX]).addTo(leaf_map);
+                            
+                            }, 
+                            fail: (error) => {
+                                console.log(error);
+                            }
+                        });
+                    }else if(is_danger=="Hexgrid"){
+                        $.ajax({
+                            method:'POST',
+                            url:"{% url 'grid_draw' %}",
+                            async : false,
+                            data : { 
+                                'draw':String(drawInfoArr), //최단거리 정보
+                                'csrfmiddlewaretoken': '{{ csrf_token }}'
+                            },
+                            
+                            success: (result) => {
+                            var container = L.DomUtil.get('map');
+                            if(container != null){
+                                container._leaflet_id = null;
+                            } 
+                            var leaf_map=L.map('map').setView([startY,startX], 15);
+                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 18}).addTo(leaf_map); 
+                            markers = L.geoJSON(draw,{
+                            style: {
+                                color: "red", 
+                                weight: 5, 
+                                fillColor: "red", 
+                                fillOpacity: 0.2
+                            }}).addTo(leaf_map);
+                            
                             //hex line (시각화)
-                            //markers = L.geoJSON(result.hex_polygon).addTo(leaf_map); //hex_line(polygon)
+                            markers = L.geoJSON(result.hex_polygon).addTo(leaf_map); //hex_line(polygon)
                             
-                            //가로등 출력(시각화)
-                            {% comment %} tempdata = result.pistes.features.;
-                            for(var i in tempdata){
-                                var geometry = tempdata[i].geometry;  //좌표정보 ()
-                                
-                                lamplist.push(i);
-                                for(var j in geometry.coordinates){
-                                //    markers = L.marker([geometry.coordinates[j][1],geometry.coordinates[j][0]).addTo(leaf_map);
-                                }
-                            } {% endcomment %}
-                            
-                            //markers = L.geoJSON(result.pistes).addTo(leaf_map);
                             markers=L.marker([startY,startX]).addTo(leaf_map);
                             markers=L.marker([endY,endX]).addTo(leaf_map);
                             
@@ -342,7 +375,6 @@
                             }
                         });
                     }
-
                 }
             });// 최단, 안전
 
@@ -384,6 +416,9 @@
 
         <input type="radio" id="radio3" name="pathfinder" value="가로등">
         <label for ="radio3">가로등</label>
+
+        <input type="radio" id="radio4" name="pathfinder" value="Hexgrid">
+        <label for ="radio4">Hexgrid</label>
 
         <!--<button id="btn_select">적용하기</button>-->
     </div>

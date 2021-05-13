@@ -112,43 +112,59 @@ def gird_draw(request):
     
     #return center extends neighbor : hex list
     neighbor=[]
-    neighbor =grid.hex_neighbors(grid.hex_at(center),map_size) #hex_neighbor : type(Hex, int) -> list
+    neighbor =grid.hex_neighbors(grid.hex_at(center),map_size+5) #hex_neighbor : type(Hex, int) -> list
 
-    print(len(neighbor))
+    print("hexgrid 개수 : ",len(neighbor))
     #test make hex to corner
     cornerlist = []
     for item in neighbor:
         cornerlist.append(grid.hex_corners(item))
+
 
     polylist =[]
     for hex in cornerlist:
       for corner in hex :
         polylist.append(corner)
 
-    print(len(polylist))
+    print("hexgrid 꼭지점 개수 : ",len(polylist))
 
     hex_line={"type":"Feature","geometry":{"type":"LineString","coordinates":polylist}}
     hex_polygon = {"type":"FeatureCollection","features":[hex_line]}
 
     # print(hex_polygon)
     #------------------return lamp data --------------------    
-    lamp = Lamp.objects.filter(lon__range=(endX,startX),lat__range=(endY,startY)).order_by('lat')
+    endx = endX
+    startx = startX
+    endy = endY
+    starty = startY
+
+    #범위의 양수 계산을 위해 변수 startx,endx / starty,endy 초기화
+    if(endX>startX) :
+        endx = startX
+        startx = endX
+    if(endY>startY) :
+        endy = startY
+        starty = endY
+
+    
+    lamp = Lamp.objects.filter(lon__range=(endx,startx),lat__range=(endy,starty)).order_by('lat')
     # lamp.order_by('lon')
-    print(len(lamp))
+    print("가로등 개수 : ",len(lamp))
 
     plist=[]
 
     for l in lamp :
         # print(l.lon)
         point=[float(l.lon),float(l.lat)]
-
         plist.append(point)
 
     
     lamp_location={"type":"Feature","geometry":{"type":"Point","coordinates":plist}}
     pistes = {"type":"FeatureCollection","features":[lamp_location]}
     
-    return HttpResponse(json.dumps({'pistes' : pistes, 'hex_polygon':hex_polygon}),content_type="application/json")
+    #print(pistes)
+    #print(pistes['features'][0]['geometry']['coordinates']) #point Array
+    return HttpResponse(json.dumps({'pistes' : pistes, 'hex_polygon':hex_polygon}),content_type="application/json") #python to json
 
 
 #hexgrid : 16진수 그리드
