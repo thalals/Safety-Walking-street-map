@@ -123,14 +123,19 @@ def gird_draw(request):
 
     polylist =[]
     for hex in cornerlist:
-      for corner in hex :
-        polylist.append(corner)
+        hexPolygon = []
+        for corner in hex :
+            temp = [corner.y , corner.x]
+            hexPolygon.append(temp)
+
+        polylist.append(hexPolygon)
 
     print("hexgrid 꼭지점 개수 : ",len(polylist))
 
-    hex_line={"type":"Feature","geometry":{"type":"LineString","coordinates":polylist}}
+    hex_line={"type":"Feature","geometry":{"type":"Polygon","coordinates":polylist}}
     hex_polygon = {"type":"FeatureCollection","features":[hex_line]}
 
+    #print(hex_polygon)
     # print(hex_polygon)
     #------------------return lamp data --------------------    
     endx = endX

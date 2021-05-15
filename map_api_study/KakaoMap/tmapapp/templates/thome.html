@@ -306,7 +306,7 @@
                             success: (result) => {
                             var container = L.DomUtil.get('map');
                             if(container != null){
-                                container._leaflet_id = null;
+                               container._leaflet_id = null;
                             } 
                             var leaf_map=L.map('map').setView([startY,startX], 15);
                             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 18}).addTo(leaf_map); 
@@ -363,11 +363,30 @@
                                 fillOpacity: 0.2
                             }}).addTo(leaf_map);
                             
-                            //hex line (시각화)
-                            markers = L.geoJSON(result.hex_polygon).addTo(leaf_map); //hex_line(polygon)
+                            //L.polygon(result.hex_polygon,{color: 'red', weight:'1px'}).addTo(leaf_map); //hex_line(polygon)
                             
+                            //hex line (시각화)
+                            tempdata = result.hex_polygon['features'][0]['geometry']['coordinates'];     //hexgrid (꼭지점의 좌표를 가짐)
+                            $.each(tempdata,function(index,grid){
+                                polygons = L.polygon([grid],{ZIndexOffset : 1}).addTo(leaf_map); // y(위도) x(경도)
+                            });
+
                             markers=L.marker([startY,startX]).addTo(leaf_map);
                             markers=L.marker([endY,endX]).addTo(leaf_map);
+                            
+                            //가로등 출력(시각화)
+                            //가로등 icon
+                            var lampicon = L.icon({
+                                iconUrl : '../static/img/lamp_icon.png',
+                                iconSize: [45, 20], //가로, 세로
+                            });                            
+                            //for each (object)
+                            tempdata = result.pistes['features'][0]['geometry']['coordinates'];
+                            $.each(result.pistes['features'][0]['geometry']['coordinates'],function(index,point){
+                                markers = L.marker([point[1],point[0]], { icon : lampicon, ZIndexOffset: 100}).addTo(leaf_map); // y(위도) x(경도)
+                            });
+
+                            
                             
                             }, 
                             fail: (error) => {
