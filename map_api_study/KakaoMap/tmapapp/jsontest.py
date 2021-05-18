@@ -1,4 +1,5 @@
 import json
+    
 
 #경기 라인 json 파일 보기
 # with를 이용해 파일을 연다.
@@ -20,12 +21,13 @@ def jsonShow_Gline():
 
             coordinates_Array.append(a['geometry']['coordinates'])
 
-        
+    print("경기도 전체 라인\n첫번째 배열 : ",coordinates_Array[0])
+    print("전체 길이 : ",len(coordinates_Array))
+
+    print("고속도로, 대로 제거 라인\n첫번째 배열 : ",coordinates_part[0])
+    print("제거 라인 길이 : ",len(coordinates_part))
 
 jsonShow_Gline()
 
-print("경기도 전체 라인\n첫번째 배열 : ",coordinates_Array[0])
-print("전체 길이 : ",len(coordinates_Array))
 
-print("고속도로, 대로 제거 라인\n첫번째 배열 : ",coordinates_part[0])
-print("제거 라인 길이 : ",len(coordinates_part))
+
