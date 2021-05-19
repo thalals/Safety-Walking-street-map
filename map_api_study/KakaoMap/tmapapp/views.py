@@ -104,35 +104,39 @@ def gird_draw(request):
     #-----------------return hex corner ---------------------
     center=hexgrid.Point((float(startX)+float(endX))/2,(float(startY)+float(endY))/2)   #중앙
     rate = 110.574 / (111.320 * math.cos(37.55582994870823 * math.pi / 180))   #서울의 중앙을 잡고, 경도값에 대한 비율     
-    grid = hexgrid.Grid(hexgrid.OrientationFlat, center, Point(rate*0.00015,0.00015), morton.Morton(2, 32)) #Point = Size
+    grid = hexgrid.Grid(hexgrid.OrientationFlat, center, Point(rate*0.00008,0.00008), morton.Morton(2, 32)) #Point = Size
     sPoint=grid.hex_at(Point(float(startX),float(startY)))      # hex_at : point to hex -> 출발지 Point -> hex좌표
     ePoint=grid.hex_at(Point(float(endX),float(endY)))          #목적지
     map_size=max(abs(sPoint.q),abs(sPoint.r))   #열col(q) 행row(r)
     
     
-    #return center extends neighbor : hex list
+    #return center extends neighbor : hex list(헥스좌표)
     neighbor=[]
     neighbor =grid.hex_neighbors(grid.hex_at(center),map_size+5) #hex_neighbor : type(Hex, int) -> list
 
+    # for a in neighbor :
+    #     print(a.q)
     print("hexgrid 개수 : ",len(neighbor))
     #test make hex to corner
     cornerlist = []
+    #item : 각각의 hex좌표
     for item in neighbor:
-        cornerlist.append(grid.hex_corners(item))
+        item_hexCorner = grid.hex_corners(item)
 
-
-    polylist =[]
-    for hex in cornerlist:
         hexPolygon = []
-        for corner in hex :
+        for corner in item_hexCorner :                      #x 와 y 바꿔서 저장 (위도, 경도로 저장해주기 위해)
             temp = [corner.y , corner.x]
             hexPolygon.append(temp)
 
-        polylist.append(hexPolygon)
+        cornerlist.append([item, hexPolygon])     #hex좌표와 실좌표 같이 저장
 
-    print("hexgrid 꼭지점 개수 : ",len(polylist))
+    print(cornerlist[0])
+    
+    # print(neighbor[0], grid.hex_corners(neighbor[0]))   #hex좌표와 해당 hex의 6방향 모서리 실좌표
 
-    hex_line={"type":"Feature","geometry":{"type":"Polygon","coordinates":polylist}}
+    # print("hexgrid 꼭지점 개수 : ",len(polylist))
+
+    hex_line={"type":"Feature","geometry":{"type":"Polygon","coordinates":cornerlist}}
     hex_polygon = {"type":"FeatureCollection","features":[hex_line]}
 
     #print(hex_polygon)
