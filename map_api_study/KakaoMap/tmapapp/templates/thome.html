@@ -284,9 +284,21 @@
                                 fillColor: "red", 
                                 fillOpacity: 0.2
                             }}).addTo(leaf_map);
-                            markers = L.geoJSON(result.pistes).addTo(leaf_map); //Line
+                            markers = L.geoJSON(result.SafePathLines).addTo(leaf_map); //Line
                             markers=L.marker([startY,startX]).addTo(leaf_map);
                             markers=L.marker([endY,endX]).addTo(leaf_map);
+                            
+                            //가로등 출력(시각화)
+                            //가로등 icon
+                            var lampicon = L.icon({
+                                iconUrl : '../static/img/lamp_icon.png',
+                                iconSize: [45, 20], //가로, 세로
+                            });                            
+                            //for each (object)
+                            tempdata1 = result.pistes['features'][0]['geometry']['coordinates'];
+                            $.each(tempdata1,function(index,point){
+                                markers = L.marker([point[1],point[0]], { icon : lampicon, ZIndexOffset: 100}).addTo(leaf_map); // y(위도) x(경도)
+                            });
                             
                             }, 
                             fail: (error) => {
@@ -375,7 +387,7 @@
                                 polygons = L.polygon([grid[1]],{
                                     color : '#FF4500',
                                     opacity: 0.45               //불투명도
-                                }).addTo(leaf_map).bindPopup("q : "+grid[0][0]+'</br>'+"r : "+grid[0][1]); // y(위도) x(경도)
+                                }).addTo(leaf_map).bindPopup("q : "+grid[0][0]+'</br>'+"r : "+grid[0][1]+'</br>'+'cost : '+grid[2]); // y(위도) x(경도)
                             });
 
                             markers=L.marker([startY,startX]).addTo(leaf_map);
