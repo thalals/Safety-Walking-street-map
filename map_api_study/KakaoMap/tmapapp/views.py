@@ -1,3 +1,4 @@
+from os import remove
 import re
 from django.http.response import HttpResponse
 from django.shortcuts import render
@@ -17,6 +18,7 @@ import hexgrid # han : pip install hexgrid-py
 import morton   #hexgrid package - pip install morton-py..? already installe during installation hexgrid-py
 
 from .Astar import *
+from . import astar_origin
 
 import folium   #지도데이터 시각화
 from folium.features import CustomIcon
@@ -104,18 +106,81 @@ def gird_draw(request):
     #-----------------return hex corner ---------------------
     center=hexgrid.Point((float(startX)+float(endX))/2,(float(startY)+float(endY))/2)   #중앙
     rate = 110.574 / (111.320 * math.cos(37.55582994870823 * math.pi / 180))   #서울의 중앙을 잡고, 경도값에 대한 비율     
-    grid = hexgrid.Grid(hexgrid.OrientationFlat, center, Point(rate*0.00008,0.00008), morton.Morton(2, 32)) #Point = Size
+    grid = hexgrid.Grid(hexgrid.OrientationFlat, center, Point(rate*0.00010,0.00010), morton.Morton(2, 32)) #Point : hexgrid Size
     sPoint=grid.hex_at(Point(float(startX),float(startY)))      # hex_at : point to hex -> 출발지 Point -> hex좌표
     ePoint=grid.hex_at(Point(float(endX),float(endY)))          #목적지
     map_size=max(abs(sPoint.q),abs(sPoint.r))   #열col(q) 행row(r)
     
+    real_hexMap_size = map_size+5   #ex) 21 (q,r)이 가지는 최대 절대값
+    #------------------범위 계산-----------------------------------#
+    #mapsize의 최대 범위 -> ex) mapsize +5 (아래의 neighbor 범위)
+    #type : tuple
+    LeftCorner = (grid.hex_center(hexgrid.Hex(-(real_hexMap_size),0)).x ,grid.hex_center(hexgrid.Hex(0,-(real_hexMap_size))).y)
+    RightCorner = (grid.hex_center(hexgrid.Hex((real_hexMap_size),0)).x ,grid.hex_center(hexgrid.Hex(0,(real_hexMap_size))).y)
+
+    print('start : ',startX, startY)
+    print('end : ',endX, endY)
+
+    print('LeftCorner : ',LeftCorner[0], LeftCorner[1])
+    print('RightCorner : ',RightCorner[0], RightCorner[1])
+   
+    # endx = endX
+    # startx = startX
+    # endy = endY
+    # starty = startY
+
+    # #범위의 양수 계산을 위해 변수 startx,endx / starty,endy 초기화
+    # if(endX>startX) :
+    #     endx = startX
+    #     startx = endX
+    # if(endY>startY) :
+    #     endy = startY
+    #     starty = endY
+
+    endx = RightCorner[0]
+    endy = RightCorner[1]
+
+    startx = LeftCorner[0]
+    starty = LeftCorner[1]
+
+    # 범위의 양수 계산을 위해 변수 startx,endx / starty,endy 초기화
+    if(endx>startx) :
+        temp = endx
+        endx = startx
+        startx = temp
+    if(endy>starty) :
+        temp = endy
+        endy = starty
+        starty = temp
+
+    #-----------------------DB data load------------------------------#
+    loadpoint = Loadpoint.objects.filter(lon__range=(endx,startx),lat__range=(endy,starty)).order_by('lat')
+    lamp = Lamp.objects.filter(lon__range=(endx,startx),lat__range=(endy,starty)).order_by('lat')
+
+    # loadpoint = Loadpoint.objects.filter(lon__range=(endx,startx),lat__range=(endy,starty)).order_by('lat')
+    # lamp = Lamp.objects.filter(lon__range=(endx,startx),lat__range=(endy,starty)).order_by('lat')
+    # lamp.order_by('lon')
+
+    #----------------------------return lamp data --------------------    
     
+    print("가로등 개수 : ",len(lamp))
+    print("실포 포인트 개수 : ", len(loadpoint))
+    plist=[]
+
+    for l in lamp :
+        # print(l.lon)
+        point=[float(l.lon),float(l.lat)]
+        plist.append(point)
+
+    
+    lamp_location={"type":"Feature","geometry":{"type":"Point","coordinates":plist}}
+    pistes = {"type":"FeatureCollection","features":[lamp_location]}
+
+    #---------------------- hex 좌표 계산-------------------------------#
     #return center extends neighbor : hex list(헥스좌표)
     neighbor=[]
-    neighbor =grid.hex_neighbors(grid.hex_at(center),map_size+5) #hex_neighbor : type(Hex, int) -> list
+    neighbor =grid.hex_neighbors(grid.hex_at(center),real_hexMap_size) #hex_neighbor : type(Hex, int) -> list
 
-    # for a in neighbor :
-    #     print(a.q)
     print("hexgrid 개수 : ",len(neighbor))
     #test make hex to corner
     cornerlist = []
@@ -127,41 +192,90 @@ def gird_draw(request):
         for corner in item_hexCorner :                      #x 와 y 바꿔서 저장 (위도, 경도로 저장해주기 위해)
             temp = [corner.y , corner.x]
             hexPolygon.append(temp)
+        
+        cost =0
+        for lamp_point in lamp :           
+            if(hexgrid.point_in_geometry(Point(lamp_point.lon, lamp_point.lat),item_hexCorner)) :  # type: (Point, list) -> bool
+                cost+=1
+                # lamp.remove(lamp_point)
+                break;
 
-        cornerlist.append([item, hexPolygon])     #hex좌표와 실좌표 같이 저장
-
+        for load_point in loadpoint :           
+            if(hexgrid.point_in_geometry(Point(load_point.lon, load_point.lat),item_hexCorner)) :  # type: (Point, list) -> bool
+                cost+=1
+                # lamp.remove(lamp_point)
+                break;         
+        cornerlist.append([item, hexPolygon, cost])     #hex좌표와 실좌표 같이 저장
+    print(cost)
     print(cornerlist[0])
+
+
+    dot = grid.hex_center(cornerlist[0][0])
+    print(dot)
+    print(sPoint,ePoint)
+
+    
     
     # print(neighbor[0], grid.hex_corners(neighbor[0]))   #hex좌표와 해당 hex의 6방향 모서리 실좌표
-
     # print("hexgrid 꼭지점 개수 : ",len(polylist))
 
     hex_line={"type":"Feature","geometry":{"type":"Polygon","coordinates":cornerlist}}
     hex_polygon = {"type":"FeatureCollection","features":[hex_line]}
+   
+    return HttpResponse(json.dumps({'pistes' : pistes, 'hex_polygon':hex_polygon}),content_type="application/json") #python to json
 
-    #print(hex_polygon)
-    # print(hex_polygon)
-    #------------------return lamp data --------------------    
-    endx = endX
-    startx = startX
-    endy = endY
-    starty = startY
-
-    #범위의 양수 계산을 위해 변수 startx,endx / starty,endy 초기화
-    if(endX>startX) :
-        endx = startX
-        startx = endX
-    if(endY>startY) :
-        endy = startY
-        starty = endY
-
+# 안정경로 탐색 Astar Custom
+def origin_Astar(request) :
+    center=hexgrid.Point((float(startX)+float(endX))/2,(float(startY)+float(endY))/2)   #중앙
+    rate = 110.574 / (111.320 * math.cos(37.55582994870823 * math.pi / 180))   #서울의 중앙을 잡고, 경도값에 대한 비율     
+    grid = hexgrid.Grid(hexgrid.OrientationFlat, center, Point(rate*0.00010,0.00010), morton.Morton(2, 32)) #Point : hexgrid Size
+    sPoint=grid.hex_at(Point(float(startX),float(startY)))      # hex_at : point to hex -> 출발지 Point -> hex좌표
+    ePoint=grid.hex_at(Point(float(endX),float(endY)))          #목적지
+    map_size=max(abs(sPoint.q),abs(sPoint.r))   #열col(q) 행row(r)
     
+    real_hexMap_size = map_size+5   #ex) 21 (q,r)이 가지는 최대 절대값
+    path = astar_origin.Go_astar(sPoint,ePoint,startX,startY, endX, endY)
+    
+    pathList = []
+    for PathPoint in path :
+        pathList.append(grid.hex_center(PathPoint))
+
+    pathLine={"type":"Feature","geometry":{"type":"LineString","coordinates":pathList}}
+    SafePathLine = {"type":"FeatureCollection","features":[pathLine]}
+    
+
+    # 시각화를 위한 램프 데이터
+    LeftCorner = (grid.hex_center(hexgrid.Hex(-(real_hexMap_size),0)).x ,grid.hex_center(hexgrid.Hex(0,-(real_hexMap_size))).y)
+    RightCorner = (grid.hex_center(hexgrid.Hex((real_hexMap_size),0)).x ,grid.hex_center(hexgrid.Hex(0,(real_hexMap_size))).y)
+
+    print('start : ',startX, startY)
+    print('end : ',endX, endY)
+
+    print('LeftCorner : ',LeftCorner[0], LeftCorner[1])
+    print('RightCorner : ',RightCorner[0], RightCorner[1])
+   
+    
+
+    endx = RightCorner[0]
+    endy = RightCorner[1]
+
+    startx = LeftCorner[0]
+    starty = LeftCorner[1]
+
+    # 범위의 양수 계산을 위해 변수 startx,endx / starty,endy 초기화
+    if(endx>startx) :
+        temp = endx
+        endx = startx
+        startx = temp
+    if(endy>starty) :
+        temp = endy
+        endy = starty
+        starty = temp
+
+    #-----------------------DB data load------------------------------#
+    loadpoint = Loadpoint.objects.filter(lon__range=(endx,startx),lat__range=(endy,starty)).order_by('lat')
     lamp = Lamp.objects.filter(lon__range=(endx,startx),lat__range=(endy,starty)).order_by('lat')
-    # lamp.order_by('lon')
-    print("가로등 개수 : ",len(lamp))
-
-    plist=[]
-
+    plist = []
     for l in lamp :
         # print(l.lon)
         point=[float(l.lon),float(l.lat)]
@@ -170,11 +284,8 @@ def gird_draw(request):
     
     lamp_location={"type":"Feature","geometry":{"type":"Point","coordinates":plist}}
     pistes = {"type":"FeatureCollection","features":[lamp_location]}
-    
-    #print(pistes)
-    #print(pistes['features'][0]['geometry']['coordinates']) #point Array
-    return HttpResponse(json.dumps({'pistes' : pistes, 'hex_polygon':hex_polygon}),content_type="application/json") #python to json
 
+    return HttpResponse(json.dumps({'SafePathLines' : SafePathLine, 'pistes' : pistes}),content_type="application/json") #python to json
 
 #hexgrid : 16진수 그리드
 def aStar(request):
