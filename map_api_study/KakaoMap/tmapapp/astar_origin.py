@@ -8,6 +8,17 @@ import hexgrid
 import morton   #hexgrid package - pip install morton-py..? already installe during installation hexgrid-py
 
 from .models import *
+import time
+
+# 시간 측정 데코레이터 함수
+def logging_time(original_fn):
+    def wrapper_fn(*args, **kwargs):
+        start_time = time.time()
+        result = original_fn(*args, **kwargs)
+        end_time = time.time()
+        print("소요시간[{}]: {} sec".format(original_fn.__name__, end_time-start_time))
+        return result
+    return wrapper_fn
 
 Point = collections.namedtuple("Point", ["x", "y"])
 
@@ -66,6 +77,7 @@ class Node:
     def __eq__(self, other):
         return self.position == other.position
 
+@logging_time
 def GiveCost(startX,startY,endX,endY) :
     #-----------------return hex corner ---------------------
     center=hexgrid.Point((float(startX)+float(endX))/2,(float(startY)+float(endY))/2)   #중앙
@@ -130,8 +142,10 @@ def GiveCost(startX,startY,endX,endY) :
                 break;         
         HexCostlist[item] = cost     #key :hex, value : cost
 
+    print("그리드 cost 선정 완료 ")
     return HexCostlist, real_hexMap_size
 
+@logging_time
 def aStar(start,end, startX,startY,endX,endY) :
     #-----------------return hex corner ---------------------
     center=hexgrid.Point((float(startX)+float(endX))/2,(float(startY)+float(endY))/2)   #중앙
