@@ -112,6 +112,17 @@ def gird_draw(request):
     map_size=max(abs(sPoint.q),abs(sPoint.r))   #열col(q) 행row(r)
     
     real_hexMap_size = map_size+5   #ex) 21 (q,r)이 가지는 최대 절대값
+
+    #astar 안전 라인
+    path = astar_origin.Go_astar(sPoint,ePoint,startX,startY, endX, endY)
+
+    pathList = []
+    for PathPoint in path :
+        pathList.append(grid.hex_center(PathPoint))
+
+    pathLine={"type":"Feature","geometry":{"type":"LineString","coordinates":pathList}}
+    SafePathLine = {"type":"FeatureCollection","features":[pathLine]}
+
     #------------------범위 계산-----------------------------------#
     #mapsize의 최대 범위 -> ex) mapsize +5 (아래의 neighbor 범위)
     #type : tuple
@@ -215,14 +226,13 @@ def gird_draw(request):
     print(sPoint,ePoint)
 
     
-    
     # print(neighbor[0], grid.hex_corners(neighbor[0]))   #hex좌표와 해당 hex의 6방향 모서리 실좌표
     # print("hexgrid 꼭지점 개수 : ",len(polylist))
 
     hex_line={"type":"Feature","geometry":{"type":"Polygon","coordinates":cornerlist}}
     hex_polygon = {"type":"FeatureCollection","features":[hex_line]}
    
-    return HttpResponse(json.dumps({'pistes' : pistes, 'hex_polygon':hex_polygon}),content_type="application/json") #python to json
+    return HttpResponse(json.dumps({'pistes' : pistes, 'hex_polygon':hex_polygon, 'SafePathLines' : SafePathLine}),content_type="application/json") #python to json
 
 # 안정경로 탐색 Astar Custom
 def origin_Astar(request) :

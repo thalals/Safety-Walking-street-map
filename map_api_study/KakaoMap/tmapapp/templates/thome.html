@@ -384,10 +384,13 @@
                             //hex line (시각화)
                             tempdata = result.hex_polygon['features'][0]['geometry']['coordinates'];     //hexgrid (꼭지점의 좌표를 가짐)
                             $.each(tempdata,function(index,grid){
-                                polygons = L.polygon([grid[1]],{
-                                    color : '#FF4500',
-                                    opacity: 0.45               //불투명도
-                                }).addTo(leaf_map).bindPopup("q : "+grid[0][0]+'</br>'+"r : "+grid[0][1]+'</br>'+'cost : '+grid[2]); // y(위도) x(경도)
+                                //COST가 존재하는 부분만 표시
+                                if(grid[2]!=-1){
+                                    polygons = L.polygon([grid[1]],{
+                                        color : '#FF4500',
+                                        opacity: 0.3 * grid[2]               //불투명도
+                                    }).addTo(leaf_map).bindPopup("q : "+grid[0][0]+'</br>'+"r : "+grid[0][1]+'</br>'+'cost : '+grid[2]); // y(위도) x(경도)
+                                }
                             });
 
                             markers=L.marker([startY,startX]).addTo(leaf_map);
@@ -405,7 +408,10 @@
                                 markers = L.marker([point[1],point[0]], { icon : lampicon, ZIndexOffset: 100}).addTo(leaf_map); // y(위도) x(경도)
                             });
 
-                            
+                            //Safety load - test 
+                            markers = L.geoJSON(result.SafePathLines).addTo(leaf_map); //Line
+                            markers=L.marker([startY,startX]).addTo(leaf_map);
+                            markers=L.marker([endY,endX]).addTo(leaf_map);
                             
                             }, 
                             fail: (error) => {
